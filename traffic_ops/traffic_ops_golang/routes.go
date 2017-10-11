@@ -29,37 +29,37 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
-
 var Authenticated = true
 var NoAuth = false
+
 // Routes returns the routes, and a catchall route for when no route matches.
 func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 	routes := []Route{
 		//ASNs
-		{1.2,http.MethodGet, `asns-wip(\.json)?$`, ASNsHandler(d.DB),ServersPrivLevel, Authenticated,nil},
+		{1.2, http.MethodGet, `asns-wip(\.json)?$`, ASNsHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		//CDNs
-		{ 1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
-		{ 1.2, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
 		// Delivery services
-		{1.3, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", urisignkeysHandler(d.DB, d.Config), HWInfoPrivLevel, Authenticated, nil},
-		{1.3, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", assignDeliveryServiceUriKeysKeysHandler(d.DB, d.Config), HWInfoPrivLevel, Authenticated, nil},
+		{1.3, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", urisignkeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", assignDeliveryServiceUriKeysKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
 
 		// Divisions
-		{ 1.2, http.MethodGet, `divisions-wip(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `divisions-wip(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
 		//HwInfo
-		{ 1.2, http.MethodGet, `hwinfo-wip(\.json)?$`, hwInfoHandler(d.DB), HWInfoPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `hwinfo-wip(\.json)?$`, hwInfoHandler(d.DB), HWInfoPrivLevel, Authenticated, nil},
 		//Parameters
-		{ 1.2, http.MethodGet, `parameters-wip(\.json)?$`, parametersHandler(d.DB), ParametersPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `parameters-wip(\.json)?$`, parametersHandler(d.DB), ParametersPrivLevel, Authenticated, nil},
 		//Regions
-		{ 1.2, http.MethodGet, `regions-wip(\.json)?$`, regionsHandler(d.DB), ServersPrivLevel, Authenticated, nil},
-		{ 1.2, http.MethodGet, "regions-wip/{id}$", regionsHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `regions-wip(\.json)?$`, regionsHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, "regions-wip/{id}$", regionsHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		//Servers
-		{ 1.2, http.MethodGet, `servers-wip(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
-		{ 1.2, http.MethodGet, "servers-wip/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
-		{ 1.2, http.MethodPost, "servers/{server}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
+		{1.2, http.MethodGet, `servers-wip(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, "servers-wip/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{1.2, http.MethodPost, "servers/{server}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
 		//System
-		{ 1.2, http.MethodGet, `system/info-wip(\.json)?$`, systemInfoHandler(d.DB), SystemInfoPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `system/info-wip(\.json)?$`, systemInfoHandler(d.DB), SystemInfoPrivLevel, Authenticated, nil},
 	}
 	return routes, rootHandler(d), nil
 }
@@ -67,7 +67,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 // RootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops
 func rootHandler(d ServerData) http.Handler {
 	tr := &http.Transport{
-		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		DialContext: (&net.Dialer{
 			Timeout:   time.Duration(d.Config.ProxyTimeout) * time.Second,
 			KeepAlive: time.Duration(d.Config.ProxyKeepAlive) * time.Second,
