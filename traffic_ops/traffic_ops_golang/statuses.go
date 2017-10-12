@@ -27,12 +27,13 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+
 	"github.com/jmoiron/sqlx"
 )
 
-const DivisionsPrivLevel = 10
+const StatusesPrivLevel = 10
 
-func divisionsHandler(db *sqlx.DB) http.HandlerFunc {
+func statusesHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
@@ -41,7 +42,9 @@ func divisionsHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		q := r.URL.Query()
-		resp, err := getDivisionsResponse(q, db)
+
+		resp, err := getStatusesResponse(q, db)
+
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -58,56 +61,58 @@ func divisionsHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getDivisionsResponse(q url.Values, db *sqlx.DB) (*tc.DivisionsResponse, error) {
-	divisions, err := getDivisions(q, db)
+func getStatusesResponse(q url.Values, db *sqlx.DB) (*tc.StatusesResponse, error) {
+	cdns, err := getStatuses(q, db)
 	if err != nil {
-		return nil, fmt.Errorf("getting divisions response: %v", err)
+		return nil, fmt.Errorf("getting cdns response: %v", err)
 	}
 
-	resp := tc.DivisionsResponse{
-		Response: divisions,
+	resp := tc.StatusesResponse{
+		Response: cdns,
 	}
 	return &resp, nil
 }
 
-func getDivisions(v url.Values, db *sqlx.DB) ([]tc.Division, error) {
+func getStatuses(v url.Values, db *sqlx.DB) ([]tc.Status, error) {
 	var rows *sqlx.Rows
 	var err error
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]string{
-		"id":   "id",
-		"name": "name",
+		"id":          "id",
+		"name":        "name",
+		"description": "description",
 	}
 
-	query, queryValues := BuildQuery(v, selectDivisionsQuery(), queryParamsToSQLCols)
+	query, queryValues := BuildQuery(v, selectStatusesQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 
 	if err != nil {
 		return nil, err
 	}
-	regions := []tc.Division{}
+	statuses := []tc.Status{}
 
 	defer rows.Close()
 	for rows.Next() {
-		var s tc.Division
+		var s tc.Status
 		if err = rows.StructScan(&s); err != nil {
-			return nil, fmt.Errorf("getting regions: %v", err)
+			return nil, fmt.Errorf("getting statuses: %v", err)
 		}
-		regions = append(regions, s)
+		statuses = append(statuses, s)
 	}
-	return regions, nil
+	return statuses, nil
 }
 
-func selectDivisionsQuery() string {
+func selectStatusesQuery() string {
 
 	query := `SELECT
+description,
 id,
 last_updated,
 name 
 
-FROM division d`
+FROM status c`
 	return query
 }

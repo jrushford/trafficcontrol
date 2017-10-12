@@ -1,5 +1,3 @@
-package tc
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,14 +17,25 @@ package tc
  * under the License.
  */
 
-type RegionsResponse struct {
-	Response []Region `json:"response"`
-}
+module.exports = angular.module('trafficPortal.private.cacheStats', [])
+	.controller('CacheStatsController', require('./CacheStatsController'))
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.private.cacheStats', {
+				url: 'cache-stats',
+				views: {
+					privateContent: {
+						templateUrl: 'modules/private/cacheStats/cacheStats.tpl.html',
+						controller: 'CacheStatsController',
+						resolve: {
+							cacheStats: function(serverService) {
+								return serverService.getCacheStats();
+							}
+						}
 
-type Region struct {
-	DivisionName string `json:"divisionName" db:"divisionname"`
-	Division     int    `json:"division" db:"division"`
-	ID           int    `json:"id" db:"id"`
-	LastUpdated  Time   `json:"lastUpdated" db:"last_updated"`
-	Name         string `json:"name" db:"name"`
-}
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
+	});

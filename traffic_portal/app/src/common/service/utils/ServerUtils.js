@@ -28,7 +28,9 @@ var ServerUtils = function($window, userModel) {
 	};
 
 	this.ssh = function(ip, $event) {
-		$window.location.href = 'ssh://' + userModel.user.username + '@' + ip;
+		if (ip && ip.length > 0) {
+			$window.location.href = 'ssh://' + userModel.user.username + '@' + ip;
+		}
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 	};
 

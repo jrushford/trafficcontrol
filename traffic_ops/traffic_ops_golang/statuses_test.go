@@ -31,24 +31,25 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestRegions() []tc.Region {
-	regions := []tc.Region{}
-	testCase := tc.Region{
-		DivisionName: "west",
-		ID:           1,
-		Name:         "region1",
-		LastUpdated:  tc.Time{Time: time.Now()},
+func getTestStatuses() []tc.Status {
+	cdns := []tc.Status{}
+	testStatus := tc.Status{
+		Description: "description",
+		ID:          1,
+		Name:        "cdn1",
+		LastUpdated: tc.Time{Time: time.Now()},
 	}
-	regions = append(regions, testCase)
+	cdns = append(cdns, testStatus)
 
-	testCase2 := testCase
-	testCase2.Name = "region2"
-	regions = append(regions, testCase2)
+	testStatus2 := testStatus
+	testStatus2.Name = "cdn2"
+	testStatus2.Description = "description2"
+	cdns = append(cdns, testStatus2)
 
-	return regions
+	return cdns
 }
 
-func TestGetRegions(t *testing.T) {
+func TestGetStatus(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	defer mockDB.Close()
 	db := sqlx.NewDb(mockDB, "sqlmock")
@@ -57,14 +58,15 @@ func TestGetRegions(t *testing.T) {
 	}
 	defer db.Close()
 
-	testCase := getTestRegions()
-	cols := test.ColsFromStructByTag("db", tc.Region{})
+	testStatus := getTestStatuses()
+	cols := test.ColsFromStructByTag("db", tc.Status{})
 	rows := sqlmock.NewRows(cols)
 
-	for _, ts := range testCase {
+	//TODO: drichardson - build helper to add these Rows from the struct values
+	//                    or by CSV if types get in the way
+	for _, ts := range testStatus {
 		rows = rows.AddRow(
-			ts.DivisionName,
-			ts.Division,
+			ts.Description,
 			ts.ID,
 			ts.LastUpdated,
 			ts.Name,
@@ -74,25 +76,25 @@ func TestGetRegions(t *testing.T) {
 	v := url.Values{}
 	v.Set("dsId", "1")
 
-	servers, err := getRegions(v, db)
+	servers, err := getStatuses(v, db)
 	if err != nil {
-		t.Errorf("getRegions expected: nil error, actual: %v", err)
+		t.Errorf("getStatus expected: nil error, actual: %v", err)
 	}
 
 	if len(servers) != 2 {
-		t.Errorf("getRegions expected: len(servers) == 1, actual: %v", len(servers))
+		t.Errorf("getStatus expected: len(servers) == 1, actual: %v", len(servers))
 	}
 
 }
 
-type SortableRegions []tc.Region
+type SortableStatuses []tc.Status
 
-func (s SortableRegions) Len() int {
+func (s SortableStatuses) Len() int {
 	return len(s)
 }
-func (s SortableRegions) Swap(i, j int) {
+func (s SortableStatuses) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
-func (s SortableRegions) Less(i, j int) bool {
+func (s SortableStatuses) Less(i, j int) bool {
 	return s[i].Name < s[j].Name
 }
