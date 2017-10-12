@@ -25,9 +25,9 @@ import (
 	"io/ioutil"
 	"net/url"
 
+	"crypto/tls"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/basho/riak-go-client"
-	"crypto/tls"
 )
 
 // Config reflects the structure of the cdn.conf file
@@ -38,7 +38,7 @@ type Config struct {
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
-	RiakAuthOptions        *riak.AuthOptions
+	RiakAuthOptions *riak.AuthOptions
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -131,7 +131,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Con
 	if err != nil {
 		return cfg, fmt.Errorf("reading riak conf '%v': %v", riakConfPath, err)
 	}
-	riakconf, err := getRiakAuthOptions((string)(riakConfBytes))
+	riakconf, err := getRiakAuthOptions(string(riakConfBytes))
 	if err != nil {
 		return cfg, fmt.Errorf("parsing riak conf '%v': %v", riakConfBytes, err)
 	}

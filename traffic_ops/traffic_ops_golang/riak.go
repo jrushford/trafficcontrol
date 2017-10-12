@@ -190,12 +190,12 @@ func urisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 
 // returns a riak cluster of online riak nodes.
 func getRiakCluster(db *sqlx.DB, cfg Config, maxNodes int) (*riak.Cluster, error) {
-	riakServerQuery := fmt.Sprintf(`
+	riakServerQuery := `
 		SELECT s.host_name, s.domain_name FROM server s 
 		INNER JOIN type t on s.type = t.id 
 		INNER JOIN status st on s.status = st.id 
 		WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
-		`)
+		`
 
 	var nodes []*riak.Node
 	rows, err := db.Query(riakServerQuery)
