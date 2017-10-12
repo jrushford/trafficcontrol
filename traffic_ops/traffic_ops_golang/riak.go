@@ -2,18 +2,24 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat/go-jwx/jwk"
 	"io/ioutil"
 	"net/http"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 const RiakPort = 8087
 const cdn_uri_keys_bucket = "cdn_uri_sig_keys" // riak namespace for cdn uri signing keys.
+
+type URISignerKeyset struct {
+	RenewalKid string             `json:"renewal_kid"`
+	Keys       []jwk.SymmetricKey `json:"keys"`
+}
 
 func getStringValue(resp *riak.FetchValueResponse) (string, error) {
 	var obj *riak.Object
@@ -50,8 +56,14 @@ func assignDeliveryServiceUriKeysKeysHandler(db *sqlx.DB, cfg Config) http.Handl
 		}
 
 		// validate that the received data is a valid jwk keyset
-		var keys jwk.SymmetricKey
-		if err := json.Unmarshal(data, &keys); err != nil {
+		var keySet map[string]URISignerKeyset
+		if err := json.Unmarshal(data, &keySet); err != nil {
+			log.Errorf("%v\n", err)
+			handleErr(err, http.StatusBadRequest)
+			return
+		}
+		if err := validateURIKeyset(keySet); err != nil {
+			log.Errorf("%v\n", err)
 			handleErr(err, http.StatusBadRequest)
 			return
 		}
@@ -67,6 +79,7 @@ func assignDeliveryServiceUriKeysKeysHandler(db *sqlx.DB, cfg Config) http.Handl
 
 		err = saveObject(obj, cdn_uri_keys_bucket, db, cfg)
 		if err != nil {
+			log.Errorf("%v\n", err)
 			handleErr(err, http.StatusInternalServerError)
 			return
 		}
@@ -122,6 +135,7 @@ func fetchObject(key string, bucket string, db *sqlx.DB, cfg Config) (*riak.Fetc
 	// create and start a riak cluster
 	cluster, err := getRiakCluster(db, cfg, 12)
 	if err != nil {
+		log.Errorf("%v\n", err)
 		return nil, err
 	}
 	defer func() {
@@ -214,4 +228,40 @@ func getRiakCluster(db *sqlx.DB, cfg Config, maxNodes int) (*riak.Cluster, error
 	cluster, err := riak.NewCluster(opts)
 
 	return cluster, err
+}
+
+func validateURIKeyset(msg map[string]URISignerKeyset) error {
+	for key, value := range msg {
+		var found bool = false
+		issuer := key
+		renewalKid := value.RenewalKid
+		if issuer == "" {
+			return errors.New("JSON Keyset has no issuer")
+		}
+		if renewalKid == "" {
+			return errors.New("JSON Keyset has no renewal kid specified")
+		}
+
+		for _, skey := range value.Keys {
+			if skey.Algorithm == "" {
+				return errors.New("A Key has no algorithm, alg, specified.\n")
+			}
+			if skey.KeyID == "" {
+				return errors.New("A Key has no key id, kid, specified.\n")
+			}
+			if skey.KeyID == renewalKid {
+				found = true
+			}
+			if skey.KeyType == "" {
+				return errors.New("A Key has no key type, kty, set.\n")
+			}
+			if skey.Key == nil {
+				return errors.New("A Key has no key, k, set.\n")
+			}
+		}
+		if !found {
+			return errors.New("No key was found with a kid that matches the renewal kid\n")
+		}
+	}
+	return nil
 }
