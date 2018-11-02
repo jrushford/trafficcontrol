@@ -39,16 +39,16 @@ mkdir -p %{buildroot}/usr/sbin/
 cp -p %{name} %{buildroot}/usr/sbin/
 
 rm -rf %{buildroot}/etc/%{name}
-mkdir -p -m 777 %{buildroot}/etc/%{name}
+mkdir -p -m 755 %{buildroot}/etc/%{name}
 cp -p conf/%{name}.cfg %{buildroot}/etc/%{name}
 
 rm -rf %{buildroot}/var/log/%{name}
-mkdir -p -m 777 %{buildroot}/var/log/%{name}
+mkdir -p -m 755 %{buildroot}/var/log/%{name}
 
-mkdir -p -m 777 %{buildroot}/etc/init.d/
+mkdir -p -m 755 %{buildroot}/etc/init.d/
 cp -p  build/%{name}.init %{buildroot}/etc/init.d/%{name}
 
-mkdir -p -m 777 %{buildroot}/etc/logrotate.d/
+mkdir -p -m 755 %{buildroot}/etc/logrotate.d/
 cp -p build/%{name}.logrotate %{buildroot}/etc/logrotate.d/%{name}
 
 %clean

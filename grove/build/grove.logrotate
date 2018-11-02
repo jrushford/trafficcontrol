@@ -45,3 +45,13 @@
         copytruncate
 }
 
+/opt/trafficserver/var/log/trafficserver/custom_ats_2.log {
+        compress
+        hourly
+        maxage 30
+        missingok
+        nomail
+        size 1G
+        rotate 30
+        copytruncate
+}
