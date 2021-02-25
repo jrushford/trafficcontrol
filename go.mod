@@ -22,7 +22,6 @@ go 1.15
 replace (
 	github.com/fsnotify/fsnotify v1.4.9 => github.com/fsnotify/fsnotify v1.3.0
 	github.com/golang/protobuf v1.4.2 => github.com/golang/protobuf v0.0.0-20171021043952-1643683e1b54
-	github.com/pborman/getopt/v2 v2.1.0 => github.com/pborman/getopt/v2 v2.0.0-20200816005738-fd0d075bf4de
 	gopkg.in/yaml.v2 v2.3.0 => gopkg.in/yaml.v2 v2.2.1
 )
 

@@ -59,7 +59,7 @@ else
 fi
 
 # fetch dependent packages for tests
-go mod vendor -v
+#go mod vendor -v
 
 if [ -f /systemctl.sh ]; then
   mv /bin/systemctl /bin/systemctl.save
