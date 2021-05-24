@@ -129,7 +129,6 @@ github.com/nxadm/tail/watch
 github.com/nxadm/tail/winfile
 # github.com/ogier/pflag v0.0.2-0.20201025181535-73e519546fc0
 ## explicit
-github.com/ogier/pflag
 # github.com/onsi/ginkgo v1.14.2
 ## explicit
 github.com/onsi/ginkgo
