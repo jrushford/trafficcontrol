@@ -1,3 +1,4 @@
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,13 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# SPDX-License-Identifier: Apache-2.0
-#
-%global src %{_topdir}/SOURCES/trafficserver
+%global src %{_topdir}/SOURCES/src
 %global git_args --git-dir="%{src}/.git" --work-tree="%{src}"
-%global git_tag %(git %{git_args} describe --long | sed 's/^\\\(.*\\\)-\\\([0-9]\\\+\\\)-g\\\([0-9a-f]\\\+\\\)$/\\\1/' | sed 's/-/_/')
+%global git_tag %(git %{git_args} describe --long |      sed 's/^\\\(.*\\\)-\\\([0-9]\\\+\\\)-g\\\([0-9a-f]\\\+\\\)$/\\\1/' | sed 's/-/_/')
 %global distance %(git %{git_args} describe --long | sed 's/^\\\(.*\\\)-\\\([0-9]\\\+\\\)-g\\\([0-9a-f]\\\+\\\)$/\\\2/')
-%global commit %(git %{git_args} describe --long | sed 's/^\\\(.*\\\)-\\\([0-9]\\\+\\\)-g\\\([0-9a-f]\\\+\\\)$/\\\3/')
+%global commit %(git %{git_args} describe --long |   sed 's/^\\\(.*\\\)-\\\([0-9]\\\+\\\)-g\\\([0-9a-f]\\\+\\\)$/\\\3/')
 %global git_serial %(git %{git_args} rev-list HEAD | wc -l)
 %global install_prefix "/opt"
 %global api_stats "4096"
@@ -35,15 +34,15 @@ Version:	%{tag}
 Epoch:		%{git_serial}
 Release:	%{distance}.%{commit}%{?dist}
 Summary:	Apache Traffic Server
-Packager:	ORT integration tests.
+#Packager:	Jeffrey_Elsloo at Cable dot Comcast dot com
 Vendor:		IPCDN
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
-URL:		  https://github.com/apache/trafficcontrol
+URL:		https://gitlab.sys.comcast.net/cdneng/apache/tree/master/trafficserver
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Requires:	tcl, hwloc, pcre, libcap, brotli, libmaxminddb, openssl
-BuildRequires:	autoconf, automake, devtoolset-9 libtool, pcre, libcap-devel, pcre-devel
-Source: trafficserver
+Requires:	tcl, hwloc, pcre, libcap, brotli, libmaxminddb
+BuildRequires:	autoconf, automake, libtool, gcc-c++, glibc-devel, expat-devel, pcre, libcap-devel, pcre-devel, perl-ExtUtils-MakeMaker, tcl-devel, hwloc-devel, brotli-devel, libmaxminddb-devel
+Source: src
 
 %description
 Apache Traffic Server with Comcast modifications and environment specific modifications
@@ -51,12 +50,13 @@ Apache Traffic Server with Comcast modifications and environment specific modifi
 %prep
 %setup -c -T
 cp -far %{src}/. .
+cp -far %{src}/../traffic_server_jemalloc ..
 autoreconf -vfi
 
 %build
-./configure --with-openssl=/usr --prefix=%{install_prefix}/%{name} --with-user=ats --with-group=ats --with-build-number=%{release} --enable-experimental-plugins --with-max-api-stats=%{api_stats} --disable-unwind
+./configure --with-openssl=/opt/trafficserver/openssl --prefix=%{install_prefix}/%{name} --with-user=ats --with-group=ats --with-build-number=%{release} --enable-experimental-plugins --with-max-api-stats=%{api_stats} --disable-unwind
 make %{?_smp_mflags}
-make %{?_smp_mflags} 
+make %{?_smp_mflags} check
 
 %install
 make DESTDIR=$RPM_BUILD_ROOT install
@@ -67,6 +67,13 @@ make DESTDIR=$RPM_BUILD_ROOT install
 mkdir -p $RPM_BUILD_ROOT/opt/trafficserver/etc/trafficserver/snapshots
 mkdir -p $RPM_BUILD_ROOT/usr/lib/systemd/system
 cp rc/trafficserver.service $RPM_BUILD_ROOT/usr/lib/systemd/system/
+cp ../traffic_server_jemalloc $RPM_BUILD_ROOT/opt/trafficserver/bin/
+
+mkdir -p $RPM_BUILD_ROOT/opt/trafficserver/openssl
+cp -r /opt/trafficserver/openssl/lib $RPM_BUILD_ROOT/opt/trafficserver/openssl/lib
+
+mkdir -p $RPM_BUILD_ROOT/opt/trafficserver/lua
+cp -r /opt/build/luacrypto/src/.libs/crypto.so $RPM_BUILD_ROOT/opt/trafficserver/lua
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -102,6 +109,8 @@ fi
 %defattr(-,root,root)
 %attr(644,-,-) /usr/lib/systemd/system/trafficserver.service
 %dir /opt/trafficserver
+/opt/trafficserver/openssl
+/opt/trafficserver/lua
 /opt/trafficserver/bin
 /opt/trafficserver/include
 /opt/trafficserver/lib
@@ -124,10 +133,10 @@ fi
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/plugin.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/records.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/remap.config
-%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ssl_server_name.yaml
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/socks.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/splitdns.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ssl_multicert.config
+%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ssl_server_name.yaml
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/storage.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/volume.config
 

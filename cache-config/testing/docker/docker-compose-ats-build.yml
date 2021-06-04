@@ -28,6 +28,14 @@ services:
   trafficserver_build:
     environment:
       - ATS_VERSION=8.1.x
+      - CJOSE_URL=https://github.com/cisco/cjose
+      - CJOSE_HEAD=254ab05
+      - JANSSON_URL=https://github.com/akheron/jansson
+      - JANSSON_HEAD=aed855e
+      - LUACRYPTO_URL=https://github.com/mkottman/luacrypto.git
+      - LUACRYPTO_HEAD=8c3f7f0
+      - OPENSSL_URL=https://github.com/openssl/openssl.git
+      - OPENSSL_HEAD=894da2fb7e
     build:
       context: ../../..
       dockerfile: cache-config/testing/docker/trafficserver/Dockerfile

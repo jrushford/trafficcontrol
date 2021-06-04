@@ -112,7 +112,7 @@ jobs:
           path: ${{ github.workspace }}/dist
           key: ${{ steps.git-repo-sha.outputs.sha }}
       - name: Build ATS RPM
-        if: steps.ats-rpm-cache.outputs.cache-hit != 'true'
+        if: steps.ats-rpm-cache.outputs.cache-hit == 'true'
         uses: ./.github/actions/build-ats-test-rpm
         env:
           ATC_COMPONENT: ${{ github.job }}

@@ -53,6 +53,12 @@ RUN yum install -y \
   tcl \
   tcl-devel
 
+RUN ls -l /opt
+ADD traffic_server/_tsb/src/cjose /opt/src/cjose
+ADD traffic_server/_tsb/src/jansson /opt/src/jansson
+ADD traffic_server/_tsb/src/openssl /opt/src/openssl
+ADD traffic_server/_tsb/cjose.pic.patch /opt/src
+ADD traffic_server/_tsb/jansson.pic.patch /opt/src
 ADD cache-config/testing/docker/trafficserver/trafficserver-8.spec /trafficserver-8.spec
 ADD cache-config/testing/docker/trafficserver/trafficserver-9.spec /trafficserver-9.spec
 ADD cache-config/testing/docker/trafficserver/run.sh /
